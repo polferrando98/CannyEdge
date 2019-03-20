@@ -11,16 +11,34 @@ def convolve(dest, src, i, j, kernel):
 def execute():
     # Load an image
     img = cv2.imread("sonic.jpg", cv2.IMREAD_ANYCOLOR)
-    rows, cols, _ = img.shape
+    rows, cols, channels = img.shape
+
+    # Kernel size / radius
+    ksize = 100
+    kradi = ksize // 2
 
     # Create the kernel manually
-    kernel = np.ones((5, 5))
+    # kernel = np.array([
+    #     [1.,  4.,  7.,  4., 1.],
+    #     [4., 16., 26., 16., 4.],
+    #     [7., 26., 41., 26., 7.],
+    #     [4., 16., 26., 16., 4.],
+    #     [1.,  4.,  7.,  4., 1.]
+    # ])
+
+    # Creating the kernel with opencv
+    kradi = ksize // 2
+    sigma = np.float64(kradi) / 2
+    kernel = cv2.getGaussianKernel(ksize, sigma)
+    kernel = np.repeat(kernel, ksize, axis=1)
+    kernel = kernel * kernel.transpose()
+    kernel = kernel / kernel.sum()
 
     # Create a copy with black padding
-    imgpadding = np.zeros((rows + 4, cols + 4, 3))
-    imgpadding[2:-2, 2:-2] = img
+    imgpadding = np.zeros((rows + 2 * kradi, cols + 2 * kradi, channels))
+    imgpadding[kradi:-kradi, kradi:-kradi] = img
 
-    # # Convolution
+    # Convolution
     filtered = np.zeros(img.shape)
     for i in range(0, rows):
         for j in range(0, cols):
@@ -28,7 +46,7 @@ def execute():
     filtered /= kernel.sum()
 
     # Using cv2
-    # filtered = cv2.boxFilter(img, -1, (5, 5))
+    # filtered = cv2.GaussianBlur(img, (5,5), 2.0)
 
     # Show the image
     cv2.imshow("Original", img)
